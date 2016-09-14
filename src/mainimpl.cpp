@@ -1526,20 +1526,20 @@ void MainImpl::ActMailFormatPatch_activated() {
 
 bool MainImpl::askApplyPatchParameters(bool* workDirOnly, bool* fold) {
 
-	int ret = 0;
+	QMessageBox::StandardButton ret;
 	if (!git->isStGITStack()) {
 		ret = QMessageBox::question(this, "Apply Patch",
 		      "Do you want to commit or just to apply changes to "
-                      "working directory?", "&Cancel", "&Working directory", "&Commit", 0, 0);
-		*workDirOnly = (ret == 1);
+                      "working directory?");
+		*workDirOnly = (ret == QMessageBox::Yes);
 		*fold = false;
 	} else {
 		ret = QMessageBox::question(this, "Apply Patch", "Do you want to "
-		      "import or fold the patch?", "&Cancel", "&Fold", "&Import", 0, 0);
+		      "import or fold the patch?");
 		*workDirOnly = false;
-		*fold = (ret == 1);
+		*fold = (ret == QMessageBox::Yes);
 	}
-	return (ret != 0);
+	return (ret != QMessageBox::Cancel);
 }
 
 void MainImpl::ActMailApplyPatch_activated() {
@@ -2001,12 +2001,11 @@ void MainImpl::ActFindNext_activated() {
 
 		if (endOfDocument) {
 			QMessageBox::warning(this, "Find text - QGit", "Text \"" +
-			             textToFind + "\" not found!", QMessageBox::Ok, 0);
+			             textToFind + "\" not found!", QMessageBox::Ok);
 			return;
 		}
 		if (QMessageBox::question(this, "Find text - QGit", "End of document "
-		    "reached\n\nDo you want to continue from beginning?", QMessageBox::Yes,
-		    QMessageBox::No | QMessageBox::Escape) == QMessageBox::No)
+		    "reached\n\nDo you want to continue from beginning?") == QMessageBox::No)
 			return;
 
 		endOfDocument = true;
