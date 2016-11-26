@@ -16,7 +16,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 # Instruct CMake to run moc automatically when needed.
 set(CMAKE_AUTOMOC ON)
 
-option(UseQt5 "Use Qt5?" ON)
+option(UseQt5 "Use Qt5?" OFF)
 if (UseQt5)
   find_package(Qt5 REQUIRED COMPONENTS Core Widgets)
   set(QT_LIBRARIES Qt5::Widgets)
