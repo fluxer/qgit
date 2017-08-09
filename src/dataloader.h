@@ -10,10 +10,10 @@
 #include <QProcess>
 #include <QTime>
 #include <QTimer>
+#include <QString>
 
 class Git;
 class FileHistory;
-class QString;
 class UnbufferedTemporaryFile;
 
 // data exchange facility with 'git log' could be based on QProcess or on

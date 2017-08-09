@@ -10,19 +10,20 @@
 #include <QProcess>
 #include <QRegExp>
 #include <QDir>
+#include <QAction>
+#include <QCloseEvent>
+#include <QComboBox>
+#include <QEvent>
+#include <QListWidgetItem>
+#include <QModelIndex>
+#include <QProgressBar>
+#include <QShortcutEvent>
+#include <QTextEdit>
+
+
 #include "exceptionmanager.h"
 #include "common.h"
 #include "ui_mainview.h"
-
-class QAction;
-class QCloseEvent;
-class QComboBox;
-class QEvent;
-class QListWidgetItem;
-class QModelIndex;
-class QProgressBar;
-class QShortcutEvent;
-class QTextEdit;
 
 class Domain;
 class Git;

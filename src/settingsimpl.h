@@ -9,7 +9,8 @@
 
 #include "ui_settings.h"
 
-class QVariant;
+#include <QVariant>
+
 class Git;
 
 class SettingsImpl: public QDialog, public Ui_settingsBase {

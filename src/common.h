@@ -15,6 +15,10 @@
 #include <QSet>
 #include <QVariant>
 #include <QVector>
+#include <QDataStream>
+#include <QProcess>
+#include <QSplitter>
+#include <QWidget>
 
 /*
    QVariant does not support size_t type used in Qt containers, this is
@@ -47,10 +51,6 @@ inline const QString  _valueOf(size_t x) { return QString::number((uint)x); }
 
 #define FOREACH_SL(i, c)    FOREACH(QStringList, i, c)
 
-class QDataStream;
-class QProcess;
-class QSplitter;
-class QWidget;
 class ShaString;
 
 // type shortcuts

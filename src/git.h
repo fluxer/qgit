@@ -10,9 +10,10 @@
 #include "exceptionmanager.h"
 #include "common.h"
 
-template <class, class> struct QPair;
-class QRegExp;
-class QTextCodec;
+#include <QPair>
+#include <QRegExp>
+#include <QTextCodec>
+
 class Annotate;
 //class DataLoader;
 class Domain;

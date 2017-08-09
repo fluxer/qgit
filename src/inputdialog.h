@@ -1,9 +1,9 @@
 #pragma once
 #include <QDialog>
 #include <QMap>
+#include <QValidator>
+#include <QPushButton>
 
-class QValidator;
-class QPushButton;
 namespace QGit {
 
 /** create an input dialog from a command containing tokens of the form

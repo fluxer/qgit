@@ -9,6 +9,9 @@
 
 #include <QPointer>
 #include <QTextEdit>
+#include <QListWidget>
+#include <QListWidgetItem>
+
 #include "common.h"
 
 class FileHighlighter;
@@ -19,9 +22,6 @@ class Git;
 class MyProcess;
 class RangeInfo;
 class FileHistory;
-
-class QListWidget;
-class QListWidgetItem;
 
 class FileContent: public QTextEdit {
 Q_OBJECT
