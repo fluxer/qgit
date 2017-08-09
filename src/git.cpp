@@ -2773,10 +2773,12 @@ void Git::procFinished() {
 
 void Git::procReadyRead(const QByteArray& fileChunk) {
 
+        QTextCodec* tc = QTextCodec::codecForLocale();
+
         if (filesLoadingPending.isEmpty())
-                filesLoadingPending = fileChunk;
+                filesLoadingPending = tc->toUnicode(fileChunk);
         else
-                filesLoadingPending.append(fileChunk); // add to previous half lines
+                filesLoadingPending.append(tc->toUnicode(fileChunk)); // add to previous half lines
 
         RevFile* rf = NULL;
         if (!filesLoadingCurSha.isEmpty() && revsFiles.contains(toTempSha(filesLoadingCurSha)))
@@ -2817,7 +2819,7 @@ void Git::flushFileNames(FileNamesLoader& fl) {
         QVector<int>& dirs = fl.rfDirs;
 
         b.clear();
-        b.resize(2 * dirs.size() * sizeof(int));
+        b.resize(2 * dirs.size() * static_cast<int>(sizeof(int)));
 
         int* d = (int*)(b.data());
 

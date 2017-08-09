@@ -1465,7 +1465,7 @@ void MainImpl::openRecent_triggered(QAction* act) {
 			setRepository(workDir);
 		else
 			statusBar()->showMessage("Directory '" + workDir +
-			                         "' does not seem to exsist anymore");
+			                         "' does not seem to exist anymore");
 	}
 }
 
@@ -2077,9 +2077,11 @@ void MainImpl::ActAbout_activated() {
 	"Copyright (c) 2014 Gregor Mi &lt;codestruct@posteo.org&gt;<br>"
 	"Copyright (c) 2014 Sbytov N.N &lt;sbytnn@gmail.com&gt;<br>"
 	"Copyright (c) 2015 Daniel Levin &lt;dendy.ua@gmail.com&gt;<br>"
-	"Copyright (c) 2016 Luigi Toscano &lt;luigi.toscano@tiscali.it&gt;<br>"
+	"Copyright (c) 2017 Luigi Toscano &lt;luigi.toscano@tiscali.it&gt;<br>"
 	"Copyright (c) 2016 Pavel Karelin &lt;hkarel@yandex.ru&gt;<br>"
-	"Copyright (c) 2016 Zane Bitter &lt;zbitter@redhat.com&gt;"
+	"Copyright (c) 2016 Zane Bitter &lt;zbitter@redhat.com&gt;<br>"
+	"Copyright (c) 2016 Robert Haschke &lt;rhaschke@techfak.uni-bielefeld.de&gt;<br>"
+	"Copyright (c) 2017 Andrey Rahmatullin $lt;wrar@wrar.name&gt;"
     "</p>"
 
 	"<p>This version was compiled against Qt " QT_VERSION_STR "</p>";
