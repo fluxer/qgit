@@ -1035,7 +1035,7 @@ void MainImpl::shortCutActivated() {
 		if (key == Qt::Key_I) {
 			rv->tab()->listViewLog->on_keyUp();
 		}
-		else if (key == (Qt::Key_K or key == Qt::Key_N)) {
+		else if ((key == Qt::Key_K) || (key == Qt::Key_N)) {
 			rv->tab()->listViewLog->on_keyDown();
 		}
 		else if (key == (Qt::SHIFT | Qt::Key_Up)) {
@@ -1062,7 +1062,7 @@ void MainImpl::shortCutActivated() {
 		else if (key == Qt::Key_D) {
 			scrollTextEdit(18); //TODO replace magic constant
 		}
-		else if (key == Qt::Key_Delete or key == Qt::Key_B or key == Qt::Key_Backspace) {
+		else if (key == Qt::Key_Delete || key == Qt::Key_B || key == Qt::Key_Backspace) {
 			scrollTextEdit(-1); //TODO replace magic constant
 		}
 		else if (key == Qt::Key_Space) {
@@ -1071,7 +1071,7 @@ void MainImpl::shortCutActivated() {
 		else if (key == Qt::Key_R) {
 			tabWdg->setCurrentWidget(rv->tabPage());
 		}
-		else if (key == Qt::Key_P or key == Qt::Key_F) {
+		else if (key == Qt::Key_P || key == Qt::Key_F) {
 			QWidget* cp = tabWdg->currentWidget();
 			Domain* d = (key == Qt::Key_P)
 						? static_cast<Domain*>(firstTab<PatchView>(cp))
@@ -1372,7 +1372,7 @@ void MainImpl::goRef_triggered(QAction* act) {
 	if (!act || act->data() != "Ref")
 		return;
 
-	SCRef refSha(git->getRefSha(act->text()));
+	SCRef refSha(git->getRefSha(act->iconText()));
 	rv->st.setSha(refSha);
 	UPDATE_DOMAIN(rv);
 }
@@ -1634,12 +1634,13 @@ void MainImpl::doUpdateCustomActionMenu(const QStringList& list) {
 
 void MainImpl::customAction_triggered(QAction* act) {
 
-	SCRef actionName = act->text();
+	QString actionName = act->text();
 	if (actionName == "Setup actions...")
 		return;
 
 	QSettings set;
-	if (!set.value(ACT_LIST_KEY).toStringList().contains(actionName)) {
+	QStringList actionsList = set.value(ACT_LIST_KEY).toStringList();
+	if (!(actionsList.contains(actionName) || actionsList.contains(actionName.remove(QChar('&'))))) {
 		dbp("ASSERT in customAction_activated, action %1 not found", actionName);
 		return;
 	}
@@ -1734,7 +1735,7 @@ void MainImpl::ActCheckout_activated()
 	const QStringList &local_branches = revision_variables.value(REV_LOCAL_BRANCHES).toStringList();
 
 	if (!selected_name.isEmpty() &&
-	    local_branches.contains(selected_name) > 0 &&
+	    local_branches.contains(selected_name) &&
 	    selected_name != current_branch) {
 		// standard branch switching: directly checkout selected branch
 		rev = selected_name;
