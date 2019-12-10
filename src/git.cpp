@@ -238,29 +238,30 @@ uint Git::checkRef(SCRef sha, uint mask) const {
 	return (it != refsShaMap.constEnd() ? (*it).type & mask : 0);
 }
 
-const QStringList Git::getRefName(SCRef sha, RefType type) const {
+const QStringList Git::getRefNames(SCRef sha, uint mask) const {
 
-	if (!checkRef(sha, type))
-		return QStringList();
+	QStringList result;
+	if (!checkRef(sha, mask))
+		return result;
 
 	const Reference& rf = refsShaMap[toTempSha(sha)];
 
-	if (type == TAG)
-		return rf.tags;
+	if (mask & TAG)
+		result << rf.tags;
 
-	else if (type == BRANCH)
-		return rf.branches;
+	if (mask & BRANCH)
+		result << rf.branches;
 
-	else if (type == RMT_BRANCH)
-		return rf.remoteBranches;
+	if (mask & RMT_BRANCH)
+		result << rf.remoteBranches;
 
-	else if (type == REF)
-		return rf.refs;
+	if (mask & REF)
+		result << rf.refs;
 
-	else if (type == APPLIED || type == UN_APPLIED)
-		return QStringList(rf.stgitPatch);
+	if (mask == APPLIED || mask == UN_APPLIED)
+		result << QStringList(rf.stgitPatch);
 
-	return QStringList();
+	return result;
 }
 
 const QStringList Git::getAllRefSha(uint mask) {
@@ -362,22 +363,22 @@ const QString Git::getRevInfo(SCRef sha) {
 	QString refsInfo;
 	if (type & BRANCH) {
 		const QString cap(type & CUR_BRANCH ? "HEAD: " : "Branch: ");
-		refsInfo =  cap + getRefName(sha, BRANCH).join(" ");
+		refsInfo =  cap + getRefNames(sha, BRANCH).join(" ");
 	}
 	if (type & RMT_BRANCH)
-		refsInfo.append("   Remote branch: " + getRefName(sha, RMT_BRANCH).join(" "));
+		refsInfo.append("   Remote branch: " + getRefNames(sha, RMT_BRANCH).join(" "));
 
 	if (type & TAG)
-		refsInfo.append("   Tag: " + getRefName(sha, TAG).join(" "));
+		refsInfo.append("   Tag: " + getRefNames(sha, TAG).join(" "));
 
 	if (type & REF)
-		refsInfo.append("   Ref: " + getRefName(sha, REF).join(" "));
+		refsInfo.append("   Ref: " + getRefNames(sha, REF).join(" "));
 
 	if (type & APPLIED)
-		refsInfo.append("   Patch: " + getRefName(sha, APPLIED).join(" "));
+		refsInfo.append("   Patch: " + getRefNames(sha, APPLIED).join(" "));
 
 	if (type & UN_APPLIED)
-		refsInfo.append("   Patch: " + getRefName(sha, UN_APPLIED).join(" "));
+		refsInfo.append("   Patch: " + getRefNames(sha, UN_APPLIED).join(" "));
 
 	if (type & TAG) {
 		SCRef msg(getTagMsg(sha));
@@ -633,6 +634,11 @@ MyProcess* Git::getDiff(SCRef sha, QObject* receiver, SCRef diffToSha, bool comb
 	if (sha != ZERO_SHA) {
 		runCmd = "git diff-tree --no-color -r --patch-with-stat ";
 		runCmd.append(combined ? "-c " : "-C -m "); // TODO rename for combined
+
+        const Rev* r = revLookup(sha);
+        if (r->parentsCount() == 0)
+            runCmd.append("--root ");
+
 		runCmd.append(diffToSha + " " + sha); // diffToSha could be empty
 	} else
 		runCmd = "git diff-index --no-color -r -m --patch-with-stat HEAD";
@@ -858,6 +864,16 @@ bool Git::isParentOf(SCRef par, SCRef child) {
 	return (c && c->parentsCount() == 1 && QString(c->parent(0)) == par); // no merges
 }
 
+bool Git::isContiguous(const QStringList &revs)
+{
+	if (revs.count() == 1) return true;
+	for (QStringList::const_iterator it=revs.begin(), end=revs.end()-1; it!=end; ++it) {
+		const Rev* c = revLookup(*it);
+		if (!c->parents().contains(*(it+1))) return false;
+	}
+	return true;
+}
+
 bool Git::isSameFiles(SCRef tree1Sha, SCRef tree2Sha) {
 
 	// early skip common case of browsing with up and down arrows, i.e.
@@ -1053,8 +1069,8 @@ const QString Git::getDesc(SCRef sha, QRegExp& shortLogRE, QRegExp& longLogRE,
 
 			if (c->isUnApplied || c->isApplied) {
 
-				QStringList patches(getRefName(sha, APPLIED));
-				patches += getRefName(sha, UN_APPLIED);
+				QStringList patches(getRefNames(sha, APPLIED));
+				patches += getRefNames(sha, UN_APPLIED);
 				ts << formatList(patches, "Patch");
 			} else {
 				ts << formatList(c->parents(), "Parent", false);
@@ -1307,6 +1323,23 @@ bool Git::resetCommits(int parentDepth) {
 	return run(runCmd);
 }
 
+bool Git::merge(SCRef into, SCList sources, QString *error)
+{
+	if (error) *error = "";
+	if (!run(QString("git checkout -q %1").arg(into)))
+		return false; // failed to checkout
+
+	QString cmd = QString("git merge -q --no-commit ") + sources.join(" ");
+	MyProcess p(parent(), this, workDir, false);
+	p.runSync(cmd, NULL, NULL, "");
+
+	const QString& e = p.getErrorOutput();
+	if (e.contains("stopped before committing as requested"))
+		return true;
+	if (error) *error = e;
+	return false;
+}
+
 bool Git::applyPatchFile(SCRef patchPath, bool fold, bool isDragDrop) {
 
 	if (isStGIT) {
@@ -1318,7 +1351,7 @@ bool Git::applyPatchFile(SCRef patchPath, bool fold, bool isDragDrop) {
 		} else
 			return run("stg import --mail " + quote(patchPath));
 	}
-	QString runCmd("git am --utf8 --3way ");
+	QString runCmd("git am ");
 
 	QSettings settings;
 	const QString APOpt(settings.value(AM_P_OPT_KEY).toString());
@@ -1573,7 +1606,7 @@ exit:
 
 bool Git::stgPush(SCRef sha) {
 
-	const QStringList patch(getRefName(sha, UN_APPLIED));
+	const QStringList patch(getRefNames(sha, UN_APPLIED));
 	if (patch.count() != 1) {
 		dbp("ASSERT in Git::stgPush, found %1 patches instead of 1", patch.count());
 		return false;
@@ -1583,7 +1616,7 @@ bool Git::stgPush(SCRef sha) {
 
 bool Git::stgPop(SCRef sha) {
 
-	const QStringList patch(getRefName(sha, APPLIED));
+	const QStringList patch(getRefNames(sha, APPLIED));
 	if (patch.count() != 1) {
 		dbp("ASSERT in Git::stgPop, found %1 patches instead of 1", patch.count());
 		return false;
@@ -1628,7 +1661,19 @@ const QStringList Git::getArgs(bool* quit, bool repoChanged) {
         arglist.removeFirst();
 
         if (startup) {
+                bool ignoreNext = false;
                 foreach (QString arg, arglist) {
+                        // ignore --view-file=* and --view-file * QGit arguments
+                        if (ignoreNext) {
+                                ignoreNext = false;
+                                continue;
+                        } else if (arg.startsWith("--view-file="))
+                                continue;
+                        else if (arg == "--view-file") {
+                                ignoreNext = true;
+                                continue;
+                        }
+
                         // in arguments with spaces double quotes
                         // are stripped by Qt, so re-add them
                         if (arg.contains(' '))
@@ -1736,7 +1781,7 @@ bool Git::getRefs() {
         curBranchSHA = curBranchSHA.trimmed();
         curBranchName = curBranchName.prepend('\n').section("\n*", 1);
         curBranchName = curBranchName.section('\n', 0, 0).trimmed();
-        if (curBranchName.startsWith("(detached from"))
+        if (curBranchName.contains(" detached "))
             curBranchName = "";
 
         // read refs, normally unsorted
